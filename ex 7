@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int p, r, m, z, k, buf, a[10], avail[10], max[10][10], alloc[10][10], need[10][10], i, j, top;
+int finish[10]; 
+
+void get() {
+    printf("\nENTER THE NUMBER OF PROCESSES: ");
+    scanf("%d", &p);
+    printf("\nENTER THE NUMBER OF RESOURCE TYPES: ");
+    scanf("%d", &r);
+
+    printf("\nENTER THE CURRENT AVAILABLE RESOURCES:\n");
+    for (j = 0; j < r; j++) {
+        printf("Type %d: ", j + 1);
+        scanf("%d", &avail[j]);
+    }
+
+    for (i = 0; i < p; i++) {
+        printf("\nENTER MAX RESOURCES FOR PROCESS %d:\n", i + 1);
+        for (j = 0; j < r; j++) {
+            printf("Type %d: ", j + 1);
+            scanf("%d", &max[i][j]);
+        }
+        finish[i] = 0; 
+    }
+
+    printf("\nENTER THE ALLOCATED INSTANCES:\n");
+    for (i = 0; i < p; i++) {
+        printf("\nPROCESS %d:\n", i + 1);
+        for (j = 0; j < r; j++) {
+            printf("Type %d: ", j + 1);
+            scanf("%d", &alloc[i][j]);
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+}
+
+void disp1() {
+    printf("\nNEED MATRIX:\n");
+    printf("-----------------");
+    for (i = 0; i < p; i++) {
+        printf("\nProcess %d:\t", i + 1);
+        for (j = 0; j < r; j++) {
+            printf(" %d", need[i][j]);
+        }
+    }
+    printf("\n");
+}
+
+void seqnc() {
+    top = 0;
+    int count = 0;
+    
+    // Attempt to find a sequence until all processes are finished or no progress can be made
+    while (top < p && count < p) {
+        for (i = 0; i < p; i++) {
+            if (finish[i] == 0) {
+                buf = 0;
+                for (j = 0; j < r; j++) {
+                    if (need[i][j] <= avail[j]) {
+                        buf++;
+                    }
+                }
+
+                if (buf == r) {
+                    for (k = 0; k < r; k++) {
+                        avail[k] += alloc[i][k];
+                    }
+                    a[top++] = i + 1;
+                    finish[i] = 1;
+                }
+            }
+        }
+        count++; // Prevent infinite loop if no safe sequence exists
+    }
+}
+
+void disp2() {
+    if (top < p) {
+        printf("\nSYSTEM IS IN AN UNSAFE STATE (Deadlock potential)!\n");
+    } else {
+        printf("\nSAFE SEQUENCE FOUND:");
+        for (i = 0; i < p; i++) {
+            printf(" P%d", a[i]);
+            if (i < p - 1) printf(" ->");
+        }
+    }
+    printf("\n");
+}
+
+int main() {
+    get();
+    disp1();
+    seqnc();
+    disp2();
+    return 0;
+}
